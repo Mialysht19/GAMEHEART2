@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Extreme 3D Game</title>
+    <title>Love 3D Game</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <style>
-        body { margin: 0; overflow: hidden; background: black; }
+        body { margin: 0; overflow: hidden; background: radial-gradient(circle, #ff007f, #ff416c, #ff5733); }
         canvas { display: block; }
     </style>
 </head>
@@ -14,41 +14,51 @@
     <script>
         let scene, camera, renderer;
         let player, speed = 0.1;
-        let obstacles = [];
+        let hearts = [];
         let score = 0;
+
+        function createHeartShape() {
+            const shape = new THREE.Shape();
+            shape.moveTo(0, 0.3);
+            shape.bezierCurveTo(0.5, 0.6, 0.5, 1, 0, 1.2);
+            shape.bezierCurveTo(-0.5, 1, -0.5, 0.6, 0, 0.3);
+            return shape;
+        }
 
         function init() {
             scene = new THREE.Scene();
             camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-            renderer = new THREE.WebGLRenderer();
+            renderer = new THREE.WebGLRenderer({ antialias: true });
             renderer.setSize(window.innerWidth, window.innerHeight);
             document.body.appendChild(renderer.domElement);
 
-            let light = new THREE.DirectionalLight(0xffffff, 1);
-            light.position.set(5, 5, 5).normalize();
+            let light = new THREE.PointLight(0xffffff, 2, 50);
+            light.position.set(5, 5, 5);
             scene.add(light);
 
-            player = new THREE.Mesh(
-                new THREE.BoxGeometry(1, 1, 1),
-                new THREE.MeshStandardMaterial({ color: 0xff0000 })
-            );
-            scene.add(player);
+            const heartShape = createHeartShape();
+            const geometry = new THREE.ExtrudeGeometry(heartShape, { depth: 0.3, bevelEnabled: true, bevelSize: 0.02 });
+            const material = new THREE.MeshStandardMaterial({ color: 0xff0000, emissive: 0xff0040, metalness: 0.5, roughness: 0.3 });
+            player = new THREE.Mesh(geometry, material);
+            player.scale.set(2, 2, 2);
             player.position.z = 5;
+            scene.add(player);
 
-            spawnObstacles();
+            spawnHearts();
             camera.position.z = 10;
             animate();
         }
 
-        function spawnObstacles() {
+        function spawnHearts() {
             for (let i = 0; i < 5; i++) {
-                let obstacle = new THREE.Mesh(
-                    new THREE.BoxGeometry(1, 1, 1),
-                    new THREE.MeshStandardMaterial({ color: 0x00ff00 })
-                );
-                obstacle.position.set(Math.random() * 6 - 3, Math.random() * 6 - 3, -10 - Math.random() * 20);
-                scene.add(obstacle);
-                obstacles.push(obstacle);
+                let heartShape = createHeartShape();
+                let geometry = new THREE.ExtrudeGeometry(heartShape, { depth: 0.2, bevelEnabled: true, bevelSize: 0.02 });
+                let material = new THREE.MeshStandardMaterial({ color: 0xff66b2, emissive: 0xff1493 });
+                let heart = new THREE.Mesh(geometry, material);
+                heart.scale.set(1.5, 1.5, 1.5);
+                heart.position.set(Math.random() * 6 - 3, Math.random() * 6 - 3, -10 - Math.random() * 20);
+                scene.add(heart);
+                hearts.push(heart);
             }
         }
 
@@ -56,16 +66,16 @@
             requestAnimationFrame(animate);
             player.position.x += speed;
 
-            obstacles.forEach(obstacle => {
-                obstacle.position.z += 0.1;
-                if (obstacle.position.z > 10) {
-                    obstacle.position.z = -20;
-                    obstacle.position.x = Math.random() * 6 - 3;
-                    obstacle.position.y = Math.random() * 6 - 3;
+            hearts.forEach(heart => {
+                heart.position.z += 0.1;
+                if (heart.position.z > 10) {
+                    heart.position.z = -20;
+                    heart.position.x = Math.random() * 6 - 3;
+                    heart.position.y = Math.random() * 6 - 3;
                     score++;
                     console.log("Score:", score);
                 }
-                if (player.position.distanceTo(obstacle.position) < 1) {
+                if (player.position.distanceTo(heart.position) < 1) {
                     console.log("Game Over! Final Score:", score);
                     document.body.innerHTML = `<h1 style='color:white;text-align:center;'>Game Over! Score: ${score}</h1>`;
                 }
@@ -91,3 +101,4 @@
     </script>
 </body>
 </html>
+
